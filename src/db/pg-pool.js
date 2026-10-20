@@ -15,7 +15,7 @@ console.log(process.env.DATABASE_HOST);
 console.log(process.env.DATABASE_NAME);
 console.log(process.env.DATABASE_PORT);
 
-const result = await pool.query("SELECT NOW()");
+const result = await pool.query("SELECT current_database(), current_user, current_schema()");
 console.log(result.rows[0]);
 
 export default pool;

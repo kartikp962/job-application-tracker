@@ -14,10 +14,12 @@ async function createUser({name, email, passwordHash}) {
 
 async function findUserByEmail(email) {
     const sqlQuery = `
-        SELECT * FROM users where id=${email}
+        SELECT * FROM users where email=$1
     `;
 
-    const result = await pool.query(sqlQuery);
+    const result = await pool.query(sqlQuery, [email]);
 
-    return result.rows[0];
+    return result.rows[0] ?? null;
 }
+
+export { createUser, findUserByEmail };

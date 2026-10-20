@@ -15,6 +15,7 @@ await pool.query(sqlString);
 const client = await pool.connect();
 
 const files = await readdir("./src/db/migrations");
+console.log(files);
 
 try {
   // BEGIN transaction

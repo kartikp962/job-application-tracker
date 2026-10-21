@@ -1,5 +1,6 @@
 import { createUser, findUserByEmail } from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 async function signup(req, res) {
   try {
@@ -38,28 +39,53 @@ async function signup(req, res) {
 }
 
 async function login(req, res) {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      message: "Email and password are required.",
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
+    }
+
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    const isPasswordMatching = await bcrypt.compare(
+      password,
+      user.password_hash,
+    );
+
+    if (!isPasswordMatching) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    const payload = { id: user.id };
+    const secret = process.env.JWT_SECRET;
+    const options = { expiresIn: "1h" };
+
+    const token = jwt.sign(payload, secret, options);
+
+    return res.status(200).json({
+      token: token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
     });
-  }
-
-  const user = await findUserByEmail(email);
-
-  if (!user) {
-    return res.status(401).json({
-      message: "Invalid email or password.",
+  } catch (error) {
+    console.error("Login failed: ", error);
+    return res.status(500).json({
+      message: "Internal server error!",
     });
-  }
-
-  const isPasswordMatching = await bcrypt.compare(password, user.password_hash);
-
-  if(!isPasswordMatching) {
-    return res.status(401).json({
-      message: 'Invalid email or password.'
-    })
   }
 }
 
